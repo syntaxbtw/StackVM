@@ -269,6 +269,10 @@ export class Compiler {
   };
 
   public compile(code: string): string {
+    this.bytecode = new Bytecode();
+    this.globalScope = new Scope(0);
+    this.scopes = [];
+
     const es5 = transpileCodeToES5(code);
 
     const ast = codeToAST(es5);
