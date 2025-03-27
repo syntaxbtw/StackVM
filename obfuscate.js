@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { VMBuilder, OperationCodes, Compiler } = require("./dist/src");
+const { VMBuilder, OperationCodes, Compiler } = require("./dist");
 
 const compiler = new Compiler();
 
