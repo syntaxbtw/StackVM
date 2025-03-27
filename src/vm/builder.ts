@@ -352,22 +352,7 @@ export class VMBuilder {
     this.opcodes = opcodes;
   };
 
-  // private randomizeOpcodes(): void {
-  //   const generate = (): number => {
-  //     const generation = Math.floor(Math.random() * 0xFF);
-  //     const values = Object.values(this.opcodes);
-
-  //     return values.includes(generation) ? generate() : generation;
-  //   };
-
-  //   Object.keys(this.opcodes).forEach((key) => {
-  //     this.opcodes[key] = generate();
-  //   });
-  // };
-
   public async build(bytecode: string): Promise<string> {
-    // this.randomizeOpcodes();
-    
     let vm = intepreter;
 
     vm = vm.replace("%BYTECODE%", bytecode);
