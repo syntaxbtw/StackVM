@@ -22,7 +22,7 @@ npm install
 ```
 
 ## 🛠️ Basic Usage
-### 1. **Prepare your input file `(input.js)`**:
+### 1. **Prepare your input file `resources/input.js`**:
 ```js
 // resources/input.js
 let a = [1,2,3,4,5,6,7,8,9,10];
@@ -33,7 +33,7 @@ let a = [1,2,3,4,5,6,7,8,9,10];
 npm start
 ```
 
-### 3. **Find output in `dist/output.js`**:
+### 3. **Find output in `resources/output.js`**:
 ```js
 // Sample obfuscated output
 (function JSVM(n,r){/*...*/})(/*...*/);

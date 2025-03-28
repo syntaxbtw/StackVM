@@ -1,6 +1,7 @@
 import { parse } from "@babel/parser";
 import { transform } from "@babel/standalone";
 import { Statement } from "@babel/types";
+import { WindowProperties } from "./constants";
 
 export function assert(condition: any, message?: string): void {
   if(!condition) {
@@ -24,4 +25,8 @@ export function codeToAST(code: string): Statement[] {
 export function validateInteger(integer: number, min: number, max: number): void {
   assert(integer >= min, `Integer <${integer}> out of min range: ${min}`);
   assert(integer <= max, `Integer <${integer}> out of max range: ${max}`);
+};
+
+export function isWindowProperty(property: string): boolean {
+  return WindowProperties.has(property);
 };

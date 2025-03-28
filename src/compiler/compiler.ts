@@ -1,5 +1,5 @@
 import * as t from "@babel/types";
-import { codeToAST, transpileCodeToES5 } from "./utils";
+import { codeToAST, isWindowProperty, transpileCodeToES5 } from "./utils";
 import { MAX_UINT16_VALUE, MAX_UINT32_VALUE, MAX_UINT8_VALUE, OperationCodes } from "./constants";
 import { Bytecode } from "./bytecode";
 import { Scope } from "./scope";
@@ -8,11 +8,13 @@ export class Compiler {
   private bytecode: Bytecode;
   private globalScope: Scope;
   private scopes: Scope[];
+  private strings: string[];
   
   public constructor() {
     this.bytecode = new Bytecode();
     this.globalScope = new Scope(0);
     this.scopes = [];
+    this.strings = [];
   };
 
   private getCurrentScope(): Scope {
@@ -31,12 +33,6 @@ export class Compiler {
 
   private walkNode(node: t.Node): void {
     switch(node.type) {
-      case "StringLiteral": {
-        
-        
-        break;
-      };
-      
       case "NumericLiteral": {
         switch(true) {
           case node.value <= MAX_UINT8_VALUE:
@@ -52,6 +48,29 @@ export class Compiler {
             this.bytecode.writeU32(node.value);
             break;
         };
+        
+        break;
+      };
+
+      case "StringLiteral": {
+        const string = node.value.split('').reverse().join('');
+
+        if(!this.strings.includes(string)) {
+          for(const char of string.split('')) {
+            this.walkNode(t.numericLiteral(char.charCodeAt(0)));
+          };
+
+          this.bytecode.writeU8(OperationCodes.REGISTER_STRING);
+          this.bytecode.writeU32(string.length);
+
+          this.strings.push(string);
+        };
+
+        const index = this.strings.indexOf(string);
+
+        this.walkNode(t.numericLiteral(index));
+
+        this.bytecode.writeU8(OperationCodes.STACK_PUSH_STRING);
         
         break;
       };
@@ -243,6 +262,11 @@ export class Compiler {
           this.walkNode(t.numericLiteral(definition.dst));
 
           this.bytecode.writeU8(OperationCodes.LOAD);
+        } else if(isWindowProperty(node.name)) {
+          this.bytecode.writeU8(OperationCodes.STACK_PUSH_THIS);
+          this.walkNode(t.stringLiteral(node.name));
+        } else {
+          this.walkNode(t.stringLiteral(node.name));
         };
         
         break;
@@ -250,6 +274,13 @@ export class Compiler {
 
       case "ExpressionStatement": {
         this.walkNode(node.expression);
+        
+        break;
+      };
+
+      case "MemberExpression": {
+        this.walkNode(node.object);
+        this.walkNode(node.property);
         
         break;
       };
@@ -265,6 +296,32 @@ export class Compiler {
 
         break;
       };
+
+      case "CallExpression": {
+        const args = node.arguments.reverse();
+        
+        for(const arg of args) {
+          this.walkNode(arg);
+        };
+
+        if(node.callee.type === 'Identifier') {
+          this.walkNode(node.callee);
+        } else if(node.callee.type === 'MemberExpression' && node.callee.object.type === 'Identifier' && node.callee.property.type === 'Identifier') {
+          this.walkNode(node.callee.object);
+
+          if(isWindowProperty(node.callee.object.name)) {
+            this.bytecode.writeU8(OperationCodes.GET_PROPERTY);
+          };
+
+          this.walkNode(node.callee.property);
+        };
+
+
+        this.bytecode.writeU8(OperationCodes.CALL_FUNCTION);
+        this.bytecode.writeU32(args.length);
+        
+        break;
+      };
     };
   };
 
@@ -272,6 +329,7 @@ export class Compiler {
     this.bytecode = new Bytecode();
     this.globalScope = new Scope(0);
     this.scopes = [];
+    this.strings = [];
 
     const es5 = transpileCodeToES5(code);
 

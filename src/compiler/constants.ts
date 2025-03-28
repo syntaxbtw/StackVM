@@ -9,6 +9,8 @@ export const OperationCodes = {
   STACK_PUSH_UINT16: COUNTER++,
   STACK_PUSH_UINT32: COUNTER++,
   STACK_PUSH_UNDEFINED: COUNTER++,
+  STACK_PUSH_STRING: COUNTER++,
+  STACK_PUSH_THIS: COUNTER++,
 
   BINARY_SUM: COUNTER++,
   BINARY_SUB: COUNTER++,
@@ -48,4 +50,27 @@ export const OperationCodes = {
 
   BUILD_ARRAY: COUNTER++,
   BUILD_OBJECT: COUNTER++,
+
+  GET_PROPERTY: COUNTER++,
+  SET_PROPERTY: COUNTER++,
+
+  CALL_FUNCTION: COUNTER++,
+
+  REGISTER_STRING: COUNTER++,
 } as const;
+
+export const WindowProperties: Set<string> = new Set([
+  "alert",
+  "prompt",
+  "confirm",
+  "console",
+  "Math",
+  "document",
+  "String",
+  "Number",
+  "Boolean",
+  "Object",
+  "Array",
+  "Function",
+  "window",
+]);

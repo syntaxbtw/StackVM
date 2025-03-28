@@ -7,6 +7,7 @@ const intepreter: string = [
     "var stack = [];",
     "var globalScope = {};",
     "var scopes = [];",
+    "var strings = [];",
 
     "function call(fn, ...args) {",
       "return fn(...args);",
@@ -24,6 +25,10 @@ const intepreter: string = [
       "return call(stack.pop.bind(stack));",
     "};",
 
+    "function stringPush(str) {",
+      "return call(strings.push.bind(strings), str);",
+    "};",
+
     "function fetchU8() {",
       "return instructions[pointer++];",
     "};",
@@ -34,6 +39,10 @@ const intepreter: string = [
 
     "function fetchU32() {",
       "return instructions[pointer++] | instructions[pointer++] << 8 | instructions[pointer++] << 16 | instructions[pointer++] << 24;",
+    "};",
+
+    "function fetchString(index) {",
+      "return strings[index];",
     "};",
 
     "function binarySum(arg$1, arg$2) {",
@@ -154,9 +163,9 @@ const intepreter: string = [
 
     "function buildArray() {",
       "const length = fetchU32();",
-      "const array = new Array();",
+      "const array = new Array(length);",
       
-      "for(let i = 0; i < length; i++) {",
+      "for(var i = 0; i < length; i++) {",
         "array[i] = stackPop();",
       "};",
 
@@ -175,6 +184,32 @@ const intepreter: string = [
       "};",
 
       "return object;",
+    "};",
+
+    "function getProperty(arg$1, arg$2) {",
+      "return arg$2[arg$1];",
+    "};",
+
+    "function callFn(arg$1, arg$2) {",
+      "const length = fetchU32();",
+      "const args = new Array(length);",
+
+      "for(var i = 0; i < length; i++) {",
+        "args[i] = stackPop();",
+      "};",
+
+      "return call(arg$2[arg$1].bind(arg$2, ...args));",
+    "};",
+
+    "function registerString() {",
+      "const length = fetchU32();",
+      "const chars = new Array(length);",
+
+      "for(var i = 0; i < length; i++) {",
+        "chars[i] = String.fromCharCode(stackPop());",
+      "};",
+
+      "return call(chars.join.bind(chars), '');",
     "};",
 
     "return function runVM() {",
@@ -197,6 +232,12 @@ const intepreter: string = [
           "case %STACK_PUSH_UNDEFINED%:",
             "call(stackPush, undefined);",
             "break",
+          "case %STACK_PUSH_STRING%:",
+            "call(stackPush, call(fetchString, stackPop()));",
+            "break;",
+          "case %STACK_PUSH_THIS%:",
+            "call(stackPush, this);",
+            "break;",
           "case %BINARY_SUM%:",
             "call(stackPush, call(binarySum, stackPop(), stackPop()));",
             "break;",
@@ -289,6 +330,15 @@ const intepreter: string = [
             "break;",
           "case %BUILD_OBJECT%:",
             "call(stackPush, call(buildObject));",
+            "break;",
+          "case %GET_PROPERTY%:",
+            "call(stackPush, call(getProperty, stackPop(), stackPop()));",
+            "break;",
+          "case %CALL_FUNCTION%:",
+            "call(stackPush, call(callFn, stackPop(), stackPop()));",
+            "break;",
+          "case %REGISTER_STRING%:",
+            "call(stringPush, call(registerString));",
             "break;",
         "};",
 
