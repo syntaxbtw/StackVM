@@ -341,8 +341,6 @@ const intepreter: string = [
             "call(stringPush, call(registerString));",
             "break;",
         "};",
-
-        "console.log(stack, globalScope);",
       "};",
     "};",
   "}).call(function () {",
